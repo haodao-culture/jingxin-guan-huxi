@@ -8,17 +8,12 @@
 - 修煉要點、練習提醒、觀照提問
 - 搜尋與觀呼吸計時器
 
-## 發布與權限提醒
+## 發布設定
 
-目前文檔尚未確認是否可對外公開，因此此版本採低曝光設定：
+網站以 GitHub Pages 靜態發布，並保留低曝光設定：
 
 - `index.html` 加上 `noindex, nofollow, noarchive`
 - `robots.txt` 阻擋搜尋引擎爬取
-- 原始 `.docx` 不納入 repo，也不提供公開下載
-
-這些設定只能降低被搜尋到的機率，不能作為真正的存取權限控管。若 GitHub Pages 發布後是公開 URL，任何知道連結的人仍可開啟網站。
-
-真正需要限制存取時，應使用 GitHub Enterprise Cloud 的 private Pages access control，或改用需要登入的內部發布平台。
 
 ## 本機預覽
 
@@ -35,8 +30,6 @@ http://127.0.0.1:4173/
 ```
 
 ## 更新內容
-
-原始 Word 檔只保留在本機 `assets/guan-huxi-original.local.docx`，並由 `.gitignore` 排除。
 
 重新抽取內容：
 

@@ -67,10 +67,10 @@
               <p>目前觀呼吸，以降低意念作用，提升「覺、觀、明」的內修心法之能力為方向主軸。</p>
             </article>
             <article class="info-card">
-              <h3>原文權限</h3>
-              <p>目前文檔尚未確認是否可對外公開，網站先以低曝光方式發布；原始 Word 檔不放入公開頁面下載。</p>
+              <h3>閱讀方式</h3>
+              <p>可以先從總覽掌握全貌，再依章節逐段閱讀老師原文；每章附有修煉要點與觀照提問，方便反覆對照練習。</p>
               <div class="download-actions">
-                <a class="button primary" href="#chapters">閱讀原文段落</a>
+                <a class="button primary" href="#chapters">進入章節</a>
                 <a class="button secondary" href="#chapters">逐章閱讀</a>
               </div>
             </article>
