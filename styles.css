@@ -115,7 +115,7 @@ textarea {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: url("assets/hero-breath-room.png") center / cover no-repeat;
+  background: url("assets/hero-breath-room.jpg") center / cover no-repeat;
 }
 
 .hero::after {
@@ -507,7 +507,7 @@ textarea {
 .practice-mode-hero {
   background:
     linear-gradient(90deg, rgba(20, 63, 54, 0.96), rgba(20, 63, 54, 0.82)),
-    url("assets/hero-breath-room.png") center / cover no-repeat;
+    url("assets/hero-breath-room.jpg") center / cover no-repeat;
 }
 
 .practice-mode-layout {

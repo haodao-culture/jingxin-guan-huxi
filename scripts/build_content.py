@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets" / "guan-huxi-original.local.docx"
 OUT = ROOT / "content-data.js"
 
+PUBLIC_EXCLUDED_PARAGRAPH_INDICES = {63, 64, 66}
+
 
 def read_paragraphs() -> list[str]:
     doc = Document(SOURCE)
@@ -91,13 +93,13 @@ CHAPTERS = [
     {
         "part": "PART II",
         "partTitle": "日常收心",
-        "title": "百日基本功與共修",
+        "title": "百日基本功與日常練習",
         "subtitle": "清醒、日常忙碌時，修煉觀呼吸",
         "range": (49, 79),
         "quoteIndex": 67,
         "takeaways": ["堅持一百天", "以覺為師", "白天清醒時修煉"],
-        "practice": "把觀呼吸放在清醒日常，而不只睡前；用心得分享檢驗自己是否真的在修煉。",
-        "questions": ["我是在加群，還是在修煉？我有沒有把修行帶入辦事之中？"],
+        "practice": "把觀呼吸放在清醒日常，而不只睡前；用心得記錄檢驗自己是否真的在修煉。",
+        "questions": ["我有沒有把觀呼吸帶入日常忙碌之中？"],
     },
     {
         "part": "PART III",
@@ -163,6 +165,11 @@ def build() -> dict:
     for index, chapter in enumerate(CHAPTERS, start=1):
         start, end = chapter["range"]
         quote_index = chapter["quoteIndex"]
+        chapter_paragraphs = [
+            paragraph
+            for paragraph_index, paragraph in enumerate(paragraphs[start:end], start=start)
+            if paragraph_index not in PUBLIC_EXCLUDED_PARAGRAPH_INDICES
+        ]
         chapters.append(
             {
                 "id": f"ch{index:02d}",
@@ -175,7 +182,7 @@ def build() -> dict:
                 "takeaways": chapter["takeaways"],
                 "practice": chapter["practice"],
                 "questions": chapter["questions"],
-                "paragraphs": paragraphs[start:end],
+                "paragraphs": chapter_paragraphs,
             }
         )
 
@@ -194,7 +201,7 @@ def build() -> dict:
         "stats": {
             "parts": len(parts),
             "chapters": len(chapters),
-            "paragraphs": len(paragraphs),
+            "paragraphs": sum(len(chapter["paragraphs"]) for chapter in chapters),
             "days": "100",
         },
         "parts": parts,
