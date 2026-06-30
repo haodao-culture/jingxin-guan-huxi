@@ -36,7 +36,7 @@
         <div class="hero-inner">
           <p class="eyebrow">HAODAO CULTURE · STUDY NOTES</p>
           <h1>靜心觀呼吸</h1>
-          <p class="hero-copy">「除了這一念，別無他念。」以老師原文為主軸，整理出觀呼吸的基本功、日常收心、心法效益與深入觀照。</p>
+          <p class="hero-copy">「除了這一念，別無他念。」以學習觀呼吸為主軸，整理出基本功、日常收心、心法效益與深入觀照。</p>
           <div class="hero-actions">
             <a class="button" href="#chapters">開始閱讀</a>
             <a class="button" href="#practice">進入練習</a>
@@ -47,7 +47,7 @@
       <section class="section" id="overview">
         <div class="container">
           <div class="section-header">
-            <h2>用老師的話，建立一條清楚的修煉路徑</h2>
+            <h2>建立一條清楚的觀呼吸修煉路徑</h2>
             <p>這份網站把原文拆成四個部分、十二個主題章節。每章保留原文段落，再附上修煉要點與觀照提問，讓團隊可以反覆閱讀、練習、分享心得。</p>
           </div>
           <div class="stats-grid">
@@ -68,7 +68,7 @@
             </article>
             <article class="info-card">
               <h3>閱讀方式</h3>
-              <p>可以先從總覽掌握全貌，再依章節逐段閱讀老師原文；每章附有修煉要點與觀照提問，方便反覆對照練習。</p>
+              <p>可以先從總覽掌握全貌，再依章節逐段閱讀原文；每章附有修煉要點與觀照提問，方便反覆對照練習。</p>
               <div class="download-actions">
                 <a class="button primary" href="#chapters">進入章節</a>
                 <a class="button secondary" href="#chapters">逐章閱讀</a>
@@ -281,7 +281,7 @@
           </aside>
 
           <article class="reader-block">
-            <h3>老師原文</h3>
+            <h3>原文段落</h3>
             ${chapter.paragraphs.map((paragraph) => `<p class="source-paragraph">${escapeHtml(paragraph)}</p>`).join("")}
             <nav class="chapter-pager" aria-label="章節切換">
               ${previous ? `<a class="button" href="${chapterHref(previous)}">上一章</a>` : `<a class="button" href="#/">回到總覽</a>`}
