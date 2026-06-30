@@ -372,6 +372,33 @@ textarea {
   min-width: 90px;
 }
 
+.custom-timer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  color: #d5e8dc;
+  font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+}
+
+.custom-timer input {
+  width: 96px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.custom-timer input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(185, 149, 76, 0.18);
+}
+
 .search-row {
   display: flex;
   align-items: center;
@@ -556,6 +583,72 @@ textarea {
   font-weight: 700;
 }
 
+.minute-input {
+  width: min(180px, 100%);
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+}
+
+.minute-input:focus {
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 4px rgba(77, 124, 93, 0.14);
+}
+
+.choice-group {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice-group legend {
+  padding: 0;
+  color: var(--deep);
+  font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-weight: 700;
+}
+
+.choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice-pill input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.choice-pill span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 7px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: #fff;
+  font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+  cursor: pointer;
+}
+
+.choice-pill input:checked + span {
+  border-color: rgba(77, 124, 93, 0.42);
+  color: #fff;
+  background: var(--deep);
+}
+
+.choice-pill input:focus-visible + span {
+  box-shadow: 0 0 0 4px rgba(77, 124, 93, 0.16);
+}
+
 .practice-record-card textarea {
   width: 100%;
   min-height: 150px;
@@ -597,14 +690,22 @@ textarea {
 
 .day-cell {
   min-height: 78px;
+  width: 100%;
   display: grid;
   align-content: center;
+  justify-items: start;
   gap: 3px;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.68);
   color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.day-cell:disabled {
+  cursor: default;
 }
 
 .day-cell span {
@@ -632,6 +733,68 @@ textarea {
 .day-cell.today {
   outline: 3px solid rgba(185, 149, 76, 0.32);
   outline-offset: 1px;
+}
+
+.day-cell.selected {
+  box-shadow: 0 0 0 4px rgba(77, 124, 93, 0.18);
+}
+
+.record-detail-card {
+  margin-top: 22px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 12px 34px rgba(23, 33, 29, 0.06);
+}
+
+.record-detail-card h3 {
+  margin: 0 0 16px;
+  color: var(--deep);
+  font-size: 1.35rem;
+}
+
+.record-detail-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.record-detail-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.record-detail-list div {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--mist);
+}
+
+.record-detail-list dt {
+  color: var(--muted);
+  font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-size: 0.82rem;
+}
+
+.record-detail-list dd {
+  margin: 5px 0 0;
+  color: var(--deep);
+  font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-weight: 700;
+}
+
+.record-note {
+  padding: 16px;
+  border-left: 3px solid var(--leaf);
+  background: #fff;
+}
+
+.record-hint {
+  margin-top: 12px !important;
+  font-size: 0.95rem;
 }
 
 .reader-layout {
@@ -745,7 +908,8 @@ textarea {
 
   .stats-grid,
   .chapter-grid,
-  .hundred-grid {
+  .hundred-grid,
+  .record-detail-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -798,6 +962,10 @@ textarea {
 
   .hundred-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .record-detail-list {
+    grid-template-columns: 1fr;
   }
 
   .search-row {

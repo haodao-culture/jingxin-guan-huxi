@@ -2,6 +2,17 @@
   const data = window.BREATH_CONTENT;
   const main = document.querySelector("#main");
   const PRACTICE_STORAGE_KEY = "haodaoBreathPracticeRecords";
+  const PRACTICE_STATES = [
+    { value: "clear", label: "清明" },
+    { value: "scattered", label: "散亂" },
+    { value: "drowsy", label: "昏沉" },
+    { value: "emotional", label: "情緒起伏" },
+  ];
+  const RETURN_STATES = [
+    { value: "yes", label: "有" },
+    { value: "partial", label: "部分" },
+    { value: "no", label: "沒有" },
+  ];
 
   const state = {
     timerSeconds: 180,
@@ -10,6 +21,7 @@
     timerHandle: null,
     timerCompleted: false,
     resetConfirmHandle: null,
+    selectedRecordKey: null,
   };
 
   function escapeHtml(value) {
@@ -52,6 +64,29 @@
   function formatShortDate(key) {
     const date = parseDateKey(key);
     return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
+  function optionLabel(options, value) {
+    return options.find((option) => option.value === value)?.label || "未記錄";
+  }
+
+  function clampMinutes(value, fallback) {
+    const number = Number.parseInt(value, 10);
+    if (Number.isNaN(number)) return fallback;
+    return Math.min(120, Math.max(1, number));
+  }
+
+  function latestRecordKey(records) {
+    return Object.keys(records).sort().at(-1) || null;
+  }
+
+  function renderRadioGroup(name, options, selected) {
+    return options.map((option) => `
+      <label class="choice-pill">
+        <input type="radio" name="${name}" value="${option.value}" ${selected === option.value ? "checked" : ""}>
+        <span>${option.label}</span>
+      </label>
+    `).join("");
   }
 
   function loadPracticeRecords() {
@@ -264,6 +299,7 @@
     state.timerRemaining = seconds;
     state.timerCompleted = false;
     updateTimerView();
+    updateMinuteInputs(Math.round(seconds / 60));
   }
 
   function toggleTimer() {
@@ -311,10 +347,19 @@
     }
   }
 
+  function updateMinuteInputs(minutes) {
+    const customMinutes = document.querySelector("#customMinutes");
+    const practiceMinutes = document.querySelector("#actualPracticeMinutes");
+    if (customMinutes) customMinutes.value = minutes;
+    if (practiceMinutes) practiceMinutes.value = minutes;
+  }
+
   function renderPracticeMode() {
     const records = loadPracticeRecords();
     const stats = getPracticeStats(records);
     const todayRecord = records[todayKey()];
+    state.selectedRecordKey = todayRecord ? todayKey() : latestRecordKey(records);
+    const selectedMinutes = clampMinutes(todayRecord?.minutes, Math.round(state.timerTotal / 60));
 
     main.innerHTML = `
       <section class="chapter-hero practice-mode-hero">
@@ -344,16 +389,31 @@
               <button class="button" data-minutes="10" type="button">10 分</button>
               <button class="button" id="timerToggle" type="button">開始</button>
             </div>
+            <div class="custom-timer">
+              <label for="customMinutes">自訂分鐘</label>
+              <input id="customMinutes" type="number" min="1" max="120" inputmode="numeric" value="${selectedMinutes}">
+              <button class="button" id="applyCustomMinutes" type="button">設定</button>
+            </div>
           </div>
 
           <aside class="practice-record-card">
             <h2>今日紀錄</h2>
-            <p>練習完成後，寫下一句當下的狀態。紀錄只保存在這台裝置，不需要登入。</p>
+            <p>練習完成後，記下實際分鐘、狀態與一句心得。紀錄只保存在這台裝置，不需要登入。</p>
             <div class="record-stats">
               <div><strong id="practiceDays">${stats.days}</strong><span>已記錄天數</span></div>
-              <div><strong id="practiceMinutes">${stats.minutes}</strong><span>累計分鐘</span></div>
+              <div><strong id="practiceTotalMinutes">${stats.minutes}</strong><span>累計分鐘</span></div>
               <div><strong id="practiceStreak">${stats.streak}</strong><span>連續天數</span></div>
             </div>
+            <label class="note-label" for="actualPracticeMinutes">實際練習分鐘</label>
+            <input class="minute-input" id="actualPracticeMinutes" type="number" min="1" max="120" inputmode="numeric" value="${selectedMinutes}">
+            <fieldset class="choice-group">
+              <legend>今天狀態</legend>
+              <div class="choice-row">${renderRadioGroup("practiceState", PRACTICE_STATES, todayRecord?.state || "")}</div>
+            </fieldset>
+            <fieldset class="choice-group">
+              <legend>是否有回到觀呼吸</legend>
+              <div class="choice-row">${renderRadioGroup("returnedToBreath", RETURN_STATES, todayRecord?.returnedToBreath || "")}</div>
+            </fieldset>
             <label class="note-label" for="practiceNote">今日心得</label>
             <textarea id="practiceNote" rows="5" placeholder="例如：今天念頭很多，但有覺察到並回到觀呼吸。">${escapeHtml(todayRecord?.note || "")}</textarea>
             <button class="button primary" id="savePracticeRecord" type="button">${todayRecord ? "更新今日紀錄" : "完成今日練習"}</button>
@@ -372,12 +432,14 @@
             </div>
           </div>
           <div class="hundred-grid" id="hundredGrid"></div>
+          <article class="record-detail-card" id="recordDetail"></article>
         </div>
       </section>
     `;
 
     bindPracticeMode();
     renderHundredGrid(records);
+    renderRecordDetail(records, state.selectedRecordKey);
     updateTimerView();
   }
 
@@ -386,22 +448,39 @@
       button.addEventListener("click", () => setTimer(Number(button.dataset.minutes) * 60));
     });
     document.querySelector("#timerToggle").addEventListener("click", toggleTimer);
+    document.querySelector("#applyCustomMinutes").addEventListener("click", applyCustomMinutes);
+    document.querySelector("#customMinutes").addEventListener("change", applyCustomMinutes);
+    document.querySelector("#actualPracticeMinutes").addEventListener("change", (event) => {
+      event.target.value = clampMinutes(event.target.value, Math.round(state.timerTotal / 60));
+    });
     document.querySelector("#savePracticeRecord").addEventListener("click", saveTodayPractice);
     document.querySelector("#resetPracticeRecords").addEventListener("click", resetPracticeRecords);
+  }
+
+  function applyCustomMinutes() {
+    const input = document.querySelector("#customMinutes");
+    const minutes = clampMinutes(input.value, Math.round(state.timerTotal / 60));
+    setTimer(minutes * 60);
   }
 
   function saveTodayPractice() {
     const records = loadPracticeRecords();
     const key = todayKey();
     const note = document.querySelector("#practiceNote").value.trim();
-    const minutes = Math.max(1, Math.round(state.timerTotal / 60));
+    const minutes = clampMinutes(document.querySelector("#actualPracticeMinutes").value, Math.round(state.timerTotal / 60));
+    const existing = records[key] || {};
     records[key] = {
+      ...existing,
       date: key,
       minutes,
+      state: document.querySelector("input[name='practiceState']:checked")?.value || "",
+      returnedToBreath: document.querySelector("input[name='returnedToBreath']:checked")?.value || "",
       note,
+      createdAt: existing.createdAt || new Date().toISOString(),
       completedAt: new Date().toISOString(),
     };
     savePracticeRecords(records);
+    state.selectedRecordKey = key;
     updatePracticeRecordView(records);
     document.querySelector("#recordStatus").textContent = `已記錄今天 ${minutes} 分鐘。`;
     document.querySelector("#savePracticeRecord").textContent = "更新今日紀錄";
@@ -416,9 +495,10 @@
   function updatePracticeRecordView(records) {
     const stats = getPracticeStats(records);
     document.querySelector("#practiceDays").textContent = stats.days;
-    document.querySelector("#practiceMinutes").textContent = stats.minutes;
+    document.querySelector("#practiceTotalMinutes").textContent = stats.minutes;
     document.querySelector("#practiceStreak").textContent = stats.streak;
     renderHundredGrid(records);
+    renderRecordDetail(records, state.selectedRecordKey);
   }
 
   function resetPracticeRecords() {
@@ -452,6 +532,7 @@
     if (note) note.value = "";
     if (status) status.textContent = "百日紀錄已重置，可以重新開始。";
     if (saveButton) saveButton.textContent = "完成今日練習";
+    state.selectedRecordKey = null;
     updatePracticeRecordView({});
   }
 
@@ -468,13 +549,47 @@
       const classes = ["day-cell"];
       if (record) classes.push("done");
       if (key === today) classes.push("today");
+      if (key === state.selectedRecordKey) classes.push("selected");
       return `
-        <div class="${classes.join(" ")}" title="${escapeHtml(key)}${record ? ` · ${record.minutes} 分鐘` : ""}">
+        <button class="${classes.join(" ")}" data-date="${key}" ${record ? "" : "disabled"} type="button" title="${escapeHtml(key)}${record ? ` · ${record.minutes} 分鐘` : ""}">
           <span>第 ${index + 1} 天</span>
           <strong>${formatShortDate(key)}</strong>
-        </div>
+        </button>
       `;
     }).join("");
+    grid.querySelectorAll(".day-cell.done").forEach((cell) => {
+      cell.addEventListener("click", () => {
+        state.selectedRecordKey = cell.dataset.date;
+        renderRecordDetail(loadPracticeRecords(), state.selectedRecordKey);
+        grid.querySelectorAll(".day-cell").forEach((item) => item.classList.remove("selected"));
+        cell.classList.add("selected");
+      });
+    });
+  }
+
+  function renderRecordDetail(records, key) {
+    const detail = document.querySelector("#recordDetail");
+    if (!detail) return;
+    const record = key ? records[key] : null;
+    if (!record) {
+      detail.innerHTML = `
+        <h3>練習日誌</h3>
+        <p>完成今日練習後，或點選已亮起的日期，就能在這裡回看紀錄。</p>
+      `;
+      return;
+    }
+
+    detail.innerHTML = `
+      <h3>${key === todayKey() ? "今日練習日誌" : "練習日誌"}</h3>
+      <dl class="record-detail-list">
+        <div><dt>日期</dt><dd>${escapeHtml(key)}</dd></div>
+        <div><dt>練習分鐘</dt><dd>${escapeHtml(record.minutes || "未記錄")} 分鐘</dd></div>
+        <div><dt>今天狀態</dt><dd>${optionLabel(PRACTICE_STATES, record.state)}</dd></div>
+        <div><dt>回到觀呼吸</dt><dd>${optionLabel(RETURN_STATES, record.returnedToBreath)}</dd></div>
+      </dl>
+      <p class="record-note">${record.note ? escapeHtml(record.note) : "這一天沒有留下心得。"}</p>
+      ${key === todayKey() ? `<p class="record-hint">今天的紀錄可以在上方「今日紀錄」更新。</p>` : ""}
+    `;
   }
 
   function renderChapter(id) {
