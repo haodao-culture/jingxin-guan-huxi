@@ -10,10 +10,7 @@
 
 ## 發布設定
 
-網站以 GitHub Pages 靜態發布，並保留低曝光設定：
-
-- `index.html` 加上 `noindex, nofollow, noarchive`
-- `robots.txt` 阻擋搜尋引擎爬取
+網站以 GitHub Pages 靜態發布。
 
 ## 本機預覽
 

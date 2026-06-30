@@ -9,6 +9,7 @@
     timerTotal: 180,
     timerHandle: null,
     timerCompleted: false,
+    resetConfirmHandle: null,
   };
 
   function escapeHtml(value) {
@@ -365,7 +366,10 @@
         <div class="container">
           <div class="section-header">
             <h2>百日基本功</h2>
-            <p>從第一次記錄開始，連續看見一百天的練習軌跡。每一格只代表一件事：今天有沒有回到「觀」呼吸。</p>
+            <div class="section-copy">
+              <p>從第一次記錄開始，連續看見一百天的練習軌跡。每一格只代表一件事：今天有沒有回到「觀」呼吸。</p>
+              <button class="button secondary reset-button" id="resetPracticeRecords" type="button">重新開始百日紀錄</button>
+            </div>
           </div>
           <div class="hundred-grid" id="hundredGrid"></div>
         </div>
@@ -383,6 +387,7 @@
     });
     document.querySelector("#timerToggle").addEventListener("click", toggleTimer);
     document.querySelector("#savePracticeRecord").addEventListener("click", saveTodayPractice);
+    document.querySelector("#resetPracticeRecords").addEventListener("click", resetPracticeRecords);
   }
 
   function saveTodayPractice() {
@@ -414,6 +419,40 @@
     document.querySelector("#practiceMinutes").textContent = stats.minutes;
     document.querySelector("#practiceStreak").textContent = stats.streak;
     renderHundredGrid(records);
+  }
+
+  function resetPracticeRecords() {
+    const resetButton = document.querySelector("#resetPracticeRecords");
+    const status = document.querySelector("#recordStatus");
+
+    if (resetButton?.dataset.confirm !== "true") {
+      if (state.resetConfirmHandle) window.clearTimeout(state.resetConfirmHandle);
+      resetButton.dataset.confirm = "true";
+      resetButton.textContent = "確認重置";
+      resetButton.classList.add("is-confirming");
+      if (status) status.textContent = "再按一次「確認重置」，才會清除這台裝置上的百日紀錄。";
+      state.resetConfirmHandle = window.setTimeout(() => {
+        resetButton.dataset.confirm = "false";
+        resetButton.textContent = "重新開始百日紀錄";
+        resetButton.classList.remove("is-confirming");
+      }, 8000);
+      return;
+    }
+
+    localStorage.removeItem(PRACTICE_STORAGE_KEY);
+    const note = document.querySelector("#practiceNote");
+    const saveButton = document.querySelector("#savePracticeRecord");
+
+    if (state.resetConfirmHandle) window.clearTimeout(state.resetConfirmHandle);
+    if (resetButton) {
+      resetButton.dataset.confirm = "false";
+      resetButton.textContent = "重新開始百日紀錄";
+      resetButton.classList.remove("is-confirming");
+    }
+    if (note) note.value = "";
+    if (status) status.textContent = "百日紀錄已重置，可以重新開始。";
+    if (saveButton) saveButton.textContent = "完成今日練習";
+    updatePracticeRecordView({});
   }
 
   function renderHundredGrid(records) {

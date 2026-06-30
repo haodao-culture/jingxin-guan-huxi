@@ -237,6 +237,12 @@ textarea {
   font-size: 1.06rem;
 }
 
+.section-copy {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -571,6 +577,16 @@ textarea {
 .record-status {
   min-height: 30px;
   font-size: 0.95rem;
+}
+
+.reset-button {
+  color: var(--deep);
+}
+
+.reset-button.is-confirming {
+  border-color: rgba(156, 95, 63, 0.45);
+  color: var(--clay);
+  background: #fff7f1;
 }
 
 .hundred-grid {
