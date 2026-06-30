@@ -1,12 +1,14 @@
 (function () {
   const data = window.BREATH_CONTENT;
   const main = document.querySelector("#main");
+  const PRACTICE_STORAGE_KEY = "haodaoBreathPracticeRecords";
 
   const state = {
     timerSeconds: 180,
     timerRemaining: 180,
     timerTotal: 180,
     timerHandle: null,
+    timerCompleted: false,
   };
 
   function escapeHtml(value) {
@@ -22,6 +24,66 @@
     return `#/chapter/${chapter.id}`;
   }
 
+  function todayKey() {
+    const date = new Date();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  function parseDateKey(key) {
+    const [year, month, day] = key.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  function dateKeyFromDate(date) {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  function addDays(date, days) {
+    const next = new Date(date);
+    next.setDate(next.getDate() + days);
+    return next;
+  }
+
+  function formatShortDate(key) {
+    const date = parseDateKey(key);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
+  function loadPracticeRecords() {
+    try {
+      return JSON.parse(localStorage.getItem(PRACTICE_STORAGE_KEY)) || {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function savePracticeRecords(records) {
+    localStorage.setItem(PRACTICE_STORAGE_KEY, JSON.stringify(records));
+  }
+
+  function getPracticeStats(records) {
+    const keys = Object.keys(records).sort();
+    const today = todayKey();
+    let cursor = parseDateKey(today);
+    let streak = 0;
+
+    while (records[dateKeyFromDate(cursor)]) {
+      streak += 1;
+      cursor = addDays(cursor, -1);
+    }
+
+    return {
+      days: keys.length,
+      minutes: keys.reduce((sum, key) => sum + Number(records[key].minutes || 0), 0),
+      streak,
+      firstDate: keys[0] || today,
+    };
+  }
+
   function groupedChapters(chapters) {
     return data.parts.map((part) => ({
       ...part,
@@ -31,6 +93,9 @@
 
   function renderHome() {
     stopTimer();
+    state.timerTotal = 180;
+    state.timerRemaining = 180;
+    state.timerCompleted = false;
     main.innerHTML = `
       <section class="hero" aria-label="靜心觀呼吸">
         <div class="hero-inner">
@@ -39,7 +104,7 @@
           <p class="hero-copy">「除了這一念，別無他念。」以學習觀呼吸為主軸，整理出基本功、日常收心、心法效益與深入觀照。</p>
           <div class="hero-actions">
             <a class="button" href="#chapters">開始閱讀</a>
-            <a class="button" href="#practice">進入練習</a>
+            <a class="button" href="#/practice-mode">進入練習</a>
           </div>
         </div>
       </section>
@@ -93,6 +158,9 @@
                 <li>身體自然會去調整到它自然的氣息。</li>
                 <li>當意識跑出來的時候，收心回到「觀」呼吸。</li>
               </ul>
+              <div class="download-actions">
+                <a class="button primary" href="#/practice-mode">開始一次練習</a>
+              </div>
             </div>
             <div class="timer-panel" aria-live="polite">
               <div class="timer-ring" id="timerRing">
@@ -193,6 +261,7 @@
     state.timerSeconds = seconds;
     state.timerTotal = seconds;
     state.timerRemaining = seconds;
+    state.timerCompleted = false;
     updateTimerView();
   }
 
@@ -209,7 +278,9 @@
       updateTimerView();
       if (state.timerRemaining === 0) {
         stopTimer();
+        state.timerCompleted = true;
         document.querySelector("#timerLabel").textContent = "練習完成";
+        updatePracticeStatus();
       }
     }, 1000);
   }
@@ -239,6 +310,134 @@
     }
   }
 
+  function renderPracticeMode() {
+    const records = loadPracticeRecords();
+    const stats = getPracticeStats(records);
+    const todayRecord = records[todayKey()];
+
+    main.innerHTML = `
+      <section class="chapter-hero practice-mode-hero">
+        <div class="container">
+          <p class="eyebrow">PRACTICE MODE</p>
+          <h1>開始觀呼吸</h1>
+          <blockquote>不必數息，不用管呼吸的長短，快慢也不用管它，只是「觀」呼吸就可以。</blockquote>
+          <div class="chapter-actions">
+            <a class="button" href="#/">回到總覽</a>
+            <a class="button" href="#chapters">章節目錄</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container practice-mode-layout">
+          <div class="timer-panel practice-focus" aria-live="polite">
+            <div class="timer-ring" id="timerRing">
+              <div class="timer-core">
+                <span class="timer-time" id="timerTime">03:00</span>
+                <span class="timer-label" id="timerLabel">觀呼吸</span>
+              </div>
+            </div>
+            <div class="timer-actions">
+              <button class="button" data-minutes="3" type="button">3 分</button>
+              <button class="button" data-minutes="5" type="button">5 分</button>
+              <button class="button" data-minutes="10" type="button">10 分</button>
+              <button class="button" id="timerToggle" type="button">開始</button>
+            </div>
+          </div>
+
+          <aside class="practice-record-card">
+            <h2>今日紀錄</h2>
+            <p>練習完成後，寫下一句當下的狀態。紀錄只保存在這台裝置，不需要登入。</p>
+            <div class="record-stats">
+              <div><strong id="practiceDays">${stats.days}</strong><span>已記錄天數</span></div>
+              <div><strong id="practiceMinutes">${stats.minutes}</strong><span>累計分鐘</span></div>
+              <div><strong id="practiceStreak">${stats.streak}</strong><span>連續天數</span></div>
+            </div>
+            <label class="note-label" for="practiceNote">今日心得</label>
+            <textarea id="practiceNote" rows="5" placeholder="例如：今天念頭很多，但有覺察到並回到觀呼吸。">${escapeHtml(todayRecord?.note || "")}</textarea>
+            <button class="button primary" id="savePracticeRecord" type="button">${todayRecord ? "更新今日紀錄" : "完成今日練習"}</button>
+            <p class="record-status" id="recordStatus">${todayRecord ? `今天已記錄 ${todayRecord.minutes} 分鐘。` : "完成練習後，按下按鈕記錄今天。"}</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section tint">
+        <div class="container">
+          <div class="section-header">
+            <h2>百日基本功</h2>
+            <p>從第一次記錄開始，連續看見一百天的練習軌跡。每一格只代表一件事：今天有沒有回到「觀」呼吸。</p>
+          </div>
+          <div class="hundred-grid" id="hundredGrid"></div>
+        </div>
+      </section>
+    `;
+
+    bindPracticeMode();
+    renderHundredGrid(records);
+    updateTimerView();
+  }
+
+  function bindPracticeMode() {
+    document.querySelectorAll("[data-minutes]").forEach((button) => {
+      button.addEventListener("click", () => setTimer(Number(button.dataset.minutes) * 60));
+    });
+    document.querySelector("#timerToggle").addEventListener("click", toggleTimer);
+    document.querySelector("#savePracticeRecord").addEventListener("click", saveTodayPractice);
+  }
+
+  function saveTodayPractice() {
+    const records = loadPracticeRecords();
+    const key = todayKey();
+    const note = document.querySelector("#practiceNote").value.trim();
+    const minutes = Math.max(1, Math.round(state.timerTotal / 60));
+    records[key] = {
+      date: key,
+      minutes,
+      note,
+      completedAt: new Date().toISOString(),
+    };
+    savePracticeRecords(records);
+    updatePracticeRecordView(records);
+    document.querySelector("#recordStatus").textContent = `已記錄今天 ${minutes} 分鐘。`;
+    document.querySelector("#savePracticeRecord").textContent = "更新今日紀錄";
+  }
+
+  function updatePracticeStatus() {
+    const status = document.querySelector("#recordStatus");
+    if (!status) return;
+    status.textContent = "練習完成，可以記錄今天。";
+  }
+
+  function updatePracticeRecordView(records) {
+    const stats = getPracticeStats(records);
+    document.querySelector("#practiceDays").textContent = stats.days;
+    document.querySelector("#practiceMinutes").textContent = stats.minutes;
+    document.querySelector("#practiceStreak").textContent = stats.streak;
+    renderHundredGrid(records);
+  }
+
+  function renderHundredGrid(records) {
+    const grid = document.querySelector("#hundredGrid");
+    if (!grid) return;
+    const stats = getPracticeStats(records);
+    const startDate = parseDateKey(stats.firstDate);
+    const today = todayKey();
+
+    grid.innerHTML = Array.from({ length: 100 }, (_, index) => {
+      const key = dateKeyFromDate(addDays(startDate, index));
+      const record = records[key];
+      const classes = ["day-cell"];
+      if (record) classes.push("done");
+      if (key === today) classes.push("today");
+      return `
+        <div class="${classes.join(" ")}" title="${escapeHtml(key)}${record ? ` · ${record.minutes} 分鐘` : ""}">
+          <span>第 ${index + 1} 天</span>
+          <strong>${formatShortDate(key)}</strong>
+        </div>
+      `;
+    }).join("");
+  }
+
   function renderChapter(id) {
     stopTimer();
     const chapter = data.chapters.find((item) => item.id === id) || data.chapters[0];
@@ -255,6 +454,7 @@
           <div class="chapter-actions">
             <a class="button" href="#/">回到總覽</a>
             <a class="button" href="#chapters">章節目錄</a>
+            <a class="button" href="#/practice-mode">開始練習</a>
           </div>
         </div>
       </section>
@@ -298,6 +498,14 @@
     const match = hash.match(/^#\/chapter\/(ch\d{2})$/);
     if (match) {
       renderChapter(match[1]);
+      window.scrollTo({ top: 0, behavior: "auto" });
+      return;
+    }
+    if (hash === "#/practice-mode") {
+      stopTimer();
+      state.timerRemaining = state.timerTotal;
+      state.timerCompleted = false;
+      renderPracticeMode();
       window.scrollTo({ top: 0, behavior: "auto" });
       return;
     }

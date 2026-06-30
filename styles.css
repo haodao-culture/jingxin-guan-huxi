@@ -35,7 +35,8 @@ a {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -470,6 +471,153 @@ input {
   padding: 56px 0 86px;
 }
 
+.practice-mode-hero {
+  background:
+    linear-gradient(90deg, rgba(20, 63, 54, 0.96), rgba(20, 63, 54, 0.82)),
+    url("assets/hero-breath-room.png") center / cover no-repeat;
+}
+
+.practice-mode-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.96fr) minmax(320px, 1.04fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.practice-focus {
+  min-height: 520px;
+}
+
+.practice-focus .timer-ring {
+  width: min(320px, 70vw);
+}
+
+.practice-record-card {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  padding: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.practice-record-card h2 {
+  margin: 0;
+  color: var(--deep);
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1.15;
+}
+
+.practice-record-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.record-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.record-stats div {
+  min-height: 102px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--mist);
+}
+
+.record-stats strong {
+  display: block;
+  color: var(--deep);
+  font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.record-stats span {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.note-label {
+  color: var(--deep);
+  font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-weight: 700;
+}
+
+.practice-record-card textarea {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  line-height: 1.7;
+}
+
+.practice-record-card textarea:focus {
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 4px rgba(77, 124, 93, 0.14);
+}
+
+.record-status {
+  min-height: 30px;
+  font-size: 0.95rem;
+}
+
+.hundred-grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.day-cell {
+  min-height: 78px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--muted);
+}
+
+.day-cell span {
+  font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-size: 0.75rem;
+}
+
+.day-cell strong {
+  color: var(--deep);
+  font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.day-cell.done {
+  border-color: rgba(77, 124, 93, 0.38);
+  background: var(--deep);
+  color: #d8eadf;
+}
+
+.day-cell.done strong {
+  color: #fff;
+}
+
+.day-cell.today {
+  outline: 3px solid rgba(185, 149, 76, 0.32);
+  outline-offset: 1px;
+}
+
 .reader-layout {
   display: grid;
   grid-template-columns: minmax(0, 0.76fr) minmax(300px, 1.24fr);
@@ -570,6 +718,7 @@ input {
 
   .section-header,
   .practice-layout,
+  .practice-mode-layout,
   .reader-layout {
     grid-template-columns: 1fr;
   }
@@ -579,7 +728,8 @@ input {
   }
 
   .stats-grid,
-  .chapter-grid {
+  .chapter-grid,
+  .hundred-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -624,6 +774,14 @@ input {
   .stats-grid,
   .chapter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .record-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .hundred-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .search-row {
