@@ -2,6 +2,7 @@
   const data = window.BREATH_CONTENT;
   const main = document.querySelector("#main");
   const PRACTICE_STORAGE_KEY = "haodaoBreathPracticeRecords";
+  const COMPLETION_CHIME_SRC = "assets/completion-chime.wav";
   const PRACTICE_STATES = [
     { value: "clear", label: "清明" },
     { value: "scattered", label: "散亂" },
@@ -20,6 +21,7 @@
     timerTotal: 180,
     timerHandle: null,
     timerCompleted: false,
+    audioContext: null,
     resetConfirmHandle: null,
     selectedRecordKey: null,
   };
@@ -34,7 +36,7 @@
   }
 
   function chapterHref(chapter) {
-    return `#/chapter/${chapter.id}`;
+    return `chapters/${chapter.id}/`;
   }
 
   function todayKey() {
@@ -198,7 +200,7 @@
                 <a class="button primary" href="#/practice-mode">開始一次練習</a>
               </div>
             </div>
-            <div class="timer-panel" aria-live="polite">
+            <div class="timer-panel">
               <div class="timer-ring" id="timerRing">
                 <div class="timer-core">
                   <span class="timer-time" id="timerTime">03:00</span>
@@ -211,6 +213,8 @@
                 <button class="button" data-minutes="10" type="button">10 分</button>
                 <button class="button" id="timerToggle" type="button">開始</button>
               </div>
+              <audio id="completionChime" preload="auto" src="${COMPLETION_CHIME_SRC}"></audio>
+              <p class="sr-only" id="timerStatus" role="status"></p>
             </div>
           </div>
         </div>
@@ -305,11 +309,14 @@
   function toggleTimer() {
     if (state.timerHandle) {
       stopTimer();
+      announceTimer("計時暫停");
       updateTimerView();
       return;
     }
+    prepareCompletionAudio();
     document.querySelector("#timerToggle").textContent = "暫停";
     document.querySelector("#timerLabel").textContent = "回到觀呼吸";
+    announceTimer("計時開始");
     state.timerHandle = window.setInterval(() => {
       state.timerRemaining = Math.max(0, state.timerRemaining - 1);
       updateTimerView();
@@ -317,6 +324,8 @@
         stopTimer();
         state.timerCompleted = true;
         document.querySelector("#timerLabel").textContent = "練習完成";
+        announceTimer("練習完成");
+        playCompletionChime();
         updatePracticeStatus();
       }
     }, 1000);
@@ -354,6 +363,73 @@
     if (practiceMinutes) practiceMinutes.value = minutes;
   }
 
+  function announceTimer(message) {
+    const status = document.querySelector("#timerStatus");
+    if (status) status.textContent = message;
+  }
+
+  function getAudioContext() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return null;
+    if (!state.audioContext) state.audioContext = new AudioContext();
+    return state.audioContext;
+  }
+
+  function prepareCompletionAudio() {
+    const audio = document.querySelector("#completionChime");
+    if (audio) audio.load();
+    const context = getAudioContext();
+    if (context?.state === "suspended") {
+      context.resume().catch(() => {});
+    }
+  }
+
+  function playCompletionChime() {
+    const audio = document.querySelector("#completionChime");
+    if (audio) {
+      audio.currentTime = 0;
+      const result = audio.play();
+      if (result?.catch) result.catch(() => playOscillatorChime());
+      return;
+    }
+    playOscillatorChime();
+  }
+
+  function playOscillatorChime() {
+    const context = getAudioContext();
+    if (!context) return;
+
+    const play = () => {
+      const now = context.currentTime;
+      const gain = context.createGain();
+      const first = context.createOscillator();
+      const second = context.createOscillator();
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.35);
+      gain.connect(context.destination);
+
+      first.type = "sine";
+      first.frequency.setValueAtTime(660, now);
+      first.connect(gain);
+      first.start(now);
+      first.stop(now + 0.7);
+
+      second.type = "sine";
+      second.frequency.setValueAtTime(880, now + 0.48);
+      second.connect(gain);
+      second.start(now + 0.48);
+      second.stop(now + 1.35);
+    };
+
+    if (context.state === "suspended") {
+      context.resume().then(play).catch(() => {});
+      return;
+    }
+    play();
+  }
+
   function renderPracticeMode() {
     const records = loadPracticeRecords();
     const stats = getPracticeStats(records);
@@ -376,7 +452,7 @@
 
       <section class="section">
         <div class="container practice-mode-layout">
-          <div class="timer-panel practice-focus" aria-live="polite">
+          <div class="timer-panel practice-focus">
             <div class="timer-ring" id="timerRing">
               <div class="timer-core">
                 <span class="timer-time" id="timerTime">03:00</span>
@@ -394,6 +470,8 @@
               <input id="customMinutes" type="number" min="1" max="120" inputmode="numeric" value="${selectedMinutes}">
               <button class="button" id="applyCustomMinutes" type="button">設定</button>
             </div>
+            <audio id="completionChime" preload="auto" src="${COMPLETION_CHIME_SRC}"></audio>
+            <p class="sr-only" id="timerStatus" role="status"></p>
           </div>
 
           <aside class="practice-record-card">

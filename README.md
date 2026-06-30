@@ -7,6 +7,7 @@
 - 原文段落閱讀
 - 修煉要點、練習提醒、觀照提問
 - 搜尋、觀呼吸計時器、練習日誌與百日練習紀錄
+- 可直接分享的靜態章節頁
 
 ## 發布設定
 
@@ -32,4 +33,5 @@ http://127.0.0.1:4173/
 
 ```bash
 python3 scripts/build_content.py
+python3 scripts/build_static_pages.py
 ```
